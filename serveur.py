@@ -42,6 +42,12 @@ class H(BaseHTTPRequestHandler):
         chemin = self.path.split("?")[0]
         if chemin == "/ping":
             return self._send(200, b"bilan-ok", "text/plain")
+        if chemin.startswith("/pdf/"):
+            from urllib.parse import unquote
+            f = (OUTPUT / unquote(chemin[5:])).resolve()
+            if OUTPUT.resolve() not in f.parents or f.suffix != ".pdf" or not f.exists():
+                return self._send(404, b"", "text/plain")
+            return self._send(200, f.read_bytes(), "application/pdf")
         nom = FICHIERS.get(chemin)
         f = ICI / nom if nom else None
         if not f or not f.exists():
@@ -49,6 +55,10 @@ class H(BaseHTTPRequestHandler):
         self._send(200, f.read_bytes(), TYPES[f.suffix])
 
     def do_POST(self):
+        if self.path == "/quitter":
+            self._send(200, b'{"ok": true}', "application/json")
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
+            return
         if self.path != "/sauver":
             return self._send(404, b"", "text/plain")
         try:
@@ -66,7 +76,19 @@ class H(BaseHTTPRequestHandler):
         pass
 
 if __name__ == "__main__":
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
+    except OSError:  # port déjà pris : une instance de l'appli tourne peut-être déjà
+        import urllib.request
+        try:
+            ok = urllib.request.urlopen(f"http://127.0.0.1:{PORT}/ping", timeout=2).read() == b"bilan-ok"
+        except Exception:  # noqa: BLE001
+            ok = False
+        if ok:
+            print("L'appli tourne déjà : ouverture du navigateur.")
+            webbrowser.open(f"http://127.0.0.1:{PORT}/")
+            sys.exit(0)
+        sys.exit(f"Le port {PORT} est occupé par un autre programme.")
     url = f"http://127.0.0.1:{PORT}/"
     print(f"Appli : {url}   (Ctrl+C pour arrêter)")
     if "--no-browser" not in sys.argv:

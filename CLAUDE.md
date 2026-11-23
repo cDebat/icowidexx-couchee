@@ -42,7 +42,7 @@ Colonnes du listing : A n° d'atelier (EDE), B Établissement, C Commune de l'at
 - `PARAMS` : paramètres, unités acceptées et facteurs de conversion vers mmol/L (Ca mg/L ÷ 40,08 ; P mg/L ÷ 30,97 ; etc.).
 - `level(k,x,v)` : seuils BoviLab / Rumexperts (aide-mémoire V2) : Ca < 2,15 bas (≤ 1,5 très bas) ; P < 1,3 ; Mg < 0,65 bas / 0,65–0,8 limite ; CK 40–180 U/L ; PT 68–88 ; ALB 30–43 ; globulines 31–47 ; AGR normal 0,84–0,94, < 0,7 bas (inflammation), > 1,2 élevé.
 - `gen()` : génère les textes (résumé, interprétation AGR, analyse, actions vétérinaire/élevage, pronostic) ; champs éditables, `state.dirty` empêche d'écraser une modification manuelle, « Régénérer » force.
-- `buildReport()` : rapport A4 dans `#paper` (table `thead`/`tfoot` répétés par page ; mise en page imprimée : page 1 = identité, résumé, AGR en grand avec jauge ; page 2 = résultats, analyse, plan d'action, pronostic). Impression navigateur (`window.print`) ou serveur.
+- `buildReport()` : rapport A4 dans `#paper` (table `thead`/`tfoot` répétés par page ; ordre voulu par l'utilisateur : identité → contexte → **Résultats** (ligne AGR surlignée) → Lecture du rapport A/G (jauge) → Interprétation des indicateurs → **À retenir** → Plan d'action (vétérinaire / élevage) → pronostic ; 2 pages A4). Impression navigateur (`window.print`) ou serveur.
 - Base éleveurs : `eleveurs.js` chargé par `<script>` ; à défaut, import manuel d'un .xlsx (SheetJS, colonnes détectées par en-tête, modifiables) mémorisé en `localStorage`.
 - Réglages cabinet (nom, vétérinaire, adresse, téléphone de l'en-tête) en `localStorage`.
 
