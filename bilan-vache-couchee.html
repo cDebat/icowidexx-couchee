@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilan vache couchée</title>
+<style>
+:root{
+  --navy:#1f3a5f; --navy2:#2d527f; --green:#2e7d32; --red:#c62828; --orange:#e07b00;
+  --ink:#1d2733; --mute:#5c6b7a; --line:#d5dde6; --bg:#f2f5f9; --card:#fff; --soft:#eef2f7;
+}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+h1,h2,h3{margin:0}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- application ---------- */
+.topbar{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h1{font-size:19px;font-weight:650;letter-spacing:.2px}
+.topbar .sub{opacity:.75;font-size:13px}
+.topbar .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px}
+.btn:hover{background:var(--soft)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--navy2)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.btn.ghost:hover{background:rgba(255,255,255,.12)}
+.btn.small{padding:4px 10px;font-size:13px}
+.wrap{max-width:1220px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.card h2{font-size:16px;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:13px;font-weight:600}
+.drop{border:2px dashed #9fb2c8;border-radius:12px;padding:22px;text-align:center;background:var(--soft);color:var(--mute)}
+.drop.over{background:#e3edf8;border-color:var(--navy)}
+.drop b{color:var(--ink)}
+.status{margin-top:10px;font-size:14px;padding:8px 12px;border-radius:8px;background:var(--soft)}
+.status.ok{background:#e8f4e9;color:#1b5e20}
+.status.warn{background:#fff3e0;color:#8a4b00}
+.status.err{background:#fdecea;color:#8e1b1b}
+.status.busy{background:#e8f0fa;color:var(--navy)}
+.bar{height:6px;background:#cfd9e6;border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--navy);transition:width .2s}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+label.f{display:block;font-size:12.5px;color:var(--mute)}
+label.f input,label.f select,label.f textarea{display:block;width:100%;margin-top:3px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:15px}
+label.f textarea{min-height:92px;resize:vertical;line-height:1.45}
+.span2{grid-column:1/-1}
+.hits{border:1px solid var(--line);border-radius:8px;margin-top:6px;max-height:230px;overflow:auto;background:#fff}
+.hits button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 10px}
+.hits button:hover{background:var(--soft)}
+.hits small{color:var(--mute)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--mute);font-size:13px}
+table.pt{width:100%;border-collapse:collapse}
+table.pt th{font-size:12px;text-align:left;color:var(--mute);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--line)}
+table.pt td{padding:5px 6px;border-bottom:1px solid #edf1f5;vertical-align:middle}
+table.pt input{width:100%;max-width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff}
+table.pt select{padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:#fff}
+table.pt input.lu{background:#f1f8e9;border-color:#9ccc65}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:650;white-space:nowrap}
+.chip.ok{background:#e1f2e2;color:#1b5e20}
+.chip.warn{background:#ffe9c7;color:#8a4b00}
+.chip.bad{background:#fbdcdc;color:#8e1b1b}
+.chip.na{background:#eceff3;color:#5c6b7a}
+details{margin-top:8px}
+summary{cursor:pointer;color:var(--navy);font-weight:600}
+.tog{display:flex;gap:18px;flex-wrap:wrap;margin:4px 0 12px}
+.tog label{display:flex;gap:8px;align-items:center}
+.aside img{width:100%;border-radius:8px;border:1px solid var(--line);display:block;cursor:zoom-in}
+.aside img.zoom{position:fixed;inset:2vh 2vw;width:auto;height:96vh;max-width:96vw;object-fit:contain;background:#fff;z-index:50;cursor:zoom-out;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+.aside{position:sticky;top:12px;align-self:start}
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.warnline{color:#8a4b00;font-size:13px;margin-top:6px}
+#reportView{display:none}
+.toolbar{position:sticky;top:0;z-index:10;background:var(--navy);color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toolbar .sp{flex:1}
+
+/* ---------- rapport (écran + impression) ---------- */
+#paper{width:210mm;min-height:297mm;margin:18px auto;background:#fff;color:#1d2733;box-shadow:0 2px 18px rgba(20,40,70,.18);font-size:10pt;line-height:1.4}
+#paper table.pg{width:100%;border-collapse:collapse}
+#paper table.pg>thead>tr>td,#paper table.pg>tbody>tr>td,#paper table.pg>tfoot>tr>td{padding:0;vertical-align:top}
+.rp-head{background:var(--navy);color:#fff;padding:7mm 15mm 5mm;display:flex;justify-content:space-between;align-items:flex-end;gap:10mm}
+.rp-head .t1{font-size:17pt;font-weight:700;line-height:1.15}
+.rp-head .t2{font-size:8.5pt;opacity:.85;margin-top:1.5mm}
+.rp-head .r{text-align:right;font-size:8.5pt;opacity:.9}
+.rp-body{padding:5mm 15mm 3mm}
+.rp-foot{padding:2mm 0 6mm;font-size:7.5pt;color:#5c6b7a;border-top:1px solid #d5dde6;margin:0 15mm}
+.rp-id{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:0;background:#eef2f7;border:1px solid #c5cfdc;border-radius:2mm;margin-bottom:4mm}
+.rp-id div{padding:2.5mm 3.5mm;font-size:9pt;border-right:1px solid #c5cfdc}
+.rp-id div:last-child{border-right:0}
+.rp-id b{display:block;color:#1f3a5f;font-size:8pt;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.8mm}
+.rp-h{font-size:11.5pt;font-weight:700;color:#1f3a5f;margin:4.5mm 0 1.8mm;break-after:avoid}
+.rp-sum{border:1px solid #ef8a00;background:#fff4e0;border-left:2mm solid #ef8a00;border-radius:1.5mm;padding:3mm 4mm;break-inside:avoid}
+.rp-sum .st{font-weight:700;font-size:10.5pt;margin-bottom:1mm}
+.rp-ctx{font-size:9.5pt;margin:0}
+table.rp-t{width:100%;border-collapse:collapse;font-size:9pt;break-inside:avoid}
+table.rp-t th{background:#1f3a5f;color:#fff;text-align:left;padding:1.6mm 2.4mm;font-weight:600;font-size:8.5pt}
+table.rp-t td{padding:1.6mm 2.4mm;border-bottom:1px solid #d5dde6;vertical-align:middle}
+table.rp-t tr:nth-child(even) td{background:#f6f8fb}
+table.rp-t tr.agr td{background:#fdecea;border-top:1.4px solid #c62828;border-bottom:1.4px solid #c62828}
+table.rp-t tr.agr.ok td{background:#e8f4e9;border-color:#2e7d32}
+table.rp-t tr.agr.warn td{background:#fff4e0;border-color:#ef8a00}
+.rp-t small{color:#5c6b7a;font-size:7.5pt;display:block}
+.rp-chip{font-weight:700;white-space:nowrap}
+.rp-chip.ok{color:#2e7d32}.rp-chip.warn{color:#c76a00}.rp-chip.bad{color:#c62828}
+.rp-agr{border:1.4px solid #1f3a5f;border-radius:2mm;overflow:hidden;break-inside:avoid}
+.rp-agr .hd{background:#1f3a5f;color:#fff;padding:1.8mm 4mm;font-weight:700;font-size:10pt}
+.rp-agr .bd{display:grid;grid-template-columns:34mm 1fr;gap:4mm;padding:3.5mm 4mm}
+.rp-agr .big{text-align:center;border-right:1px solid #d5dde6;padding-right:3mm}
+.rp-agr .big .n{font-size:27pt;font-weight:800;line-height:1.05}
+.rp-agr .big .l{font-size:8pt;color:#5c6b7a;margin-top:.6mm}
+.rp-agr .big .c{display:inline-block;margin-top:1.6mm;padding:.7mm 2.6mm;border-radius:99px;color:#fff;font-weight:700;font-size:8.5pt}
+.rp-agr p{margin:1.6mm 0 0}
+.rp-agr p:first-child{margin-top:0}
+ul.rp-ul{margin:0;padding-left:4.6mm}
+ul.rp-ul li{margin:0 0 1.5mm}
+.rp-act{display:grid;grid-template-columns:1fr 1fr;border:1px solid #c5cfdc;border-radius:1.5mm;overflow:hidden;break-inside:avoid}
+.rp-act>div{padding:0 0 2mm}
+.rp-act>div:first-child{border-right:1px solid #c5cfdc}
+.rp-act h4{margin:0 0 2mm;color:#fff;padding:1.6mm 3.4mm;font-size:9.5pt}
+.rp-act ul{margin:0;padding:0 3.4mm 0 7.5mm}
+.rp-act li{margin-bottom:1.3mm;font-size:9pt}
+.rp-prog{margin-top:3.5mm;font-size:9.5pt;break-inside:avoid}
+
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .topbar,#app,.toolbar{display:none!important}
+  #reportView{display:block!important}
+  #paper{box-shadow:none;margin:0;width:auto;min-height:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= VUE SAISIE ================= -->
+<div id="app">
+  <div class="topbar">
+    <h1>Bilan vache couchée</h1><span class="sub">compte rendu IDEXX &rarr; rapport éleveur</span>
+    <span class="sp"></span>
+    <button class="btn ghost small" id="btnReset" type="button">Nouveau bilan</button>
+    <button class="btn ghost small" id="btnSettings" type="button">Réglages cabinet</button>
+  </div>
+
+  <div class="wrap">
+    <main>
+      <!-- Réglages -->
+      <section class="card" id="settingsCard" hidden>
+        <h2>Réglages du cabinet (en-tête des rapports)</h2>
+        <div class="grid2">
+          <label class="f">Nom de la structure<input id="sClinic"></label>
+          <label class="f">Vétérinaire (signature)<input id="sVet"></label>
+          <label class="f">Adresse<input id="sAddr"></label>
+          <label class="f">Téléphone<input id="sTel"></label>
+        </div>
+        <p class="muted">Enregistré dans ce navigateur uniquement.</p>
+      </section>
+
+      <!-- 1. Fichier -->
+      <section class="card">
+        <h2><span class="step">1</span> Résultats d'analyse</h2>
+        <div class="drop" id="drop">
+          <b>Déposez ici le compte rendu IDEXX</b> (PDF, photo ou scan)<br>
+          <span class="muted">ou</span> <button class="btn small" id="pickFile" type="button">Choisir un fichier</button>
+          <input type="file" id="file" accept="application/pdf,image/*" hidden>
+        </div>
+        <div id="scanStatus" class="status" hidden></div>
+        <div class="bar" id="scanBar" hidden><i></i></div>
+        <p class="muted" style="margin:10px 0 0">Lecture automatique, puis <b>vérification obligatoire</b> de chaque valeur. La saisie manuelle reste possible ci-dessous.</p>
+      </section>
+
+      <!-- 2. Éleveur -->
+      <section class="card">
+        <h2><span class="step">2</span> Éleveur et animal</h2>
+        <div class="row" style="margin-bottom:8px">
+          <button class="btn small" id="pickDb" type="button">Charger un autre listing (.xlsx)</button>
+          <input type="file" id="dbFile" accept=".xlsx,.xls,.csv" hidden>
+          <span class="muted" id="dbInfo">Aucune base chargée (lancer maj_eleveurs.py ou charger le listing).</span>
+        </div>
+        <div id="dbMap" hidden></div>
+        <label class="f">Rechercher un éleveur (nom, commune ou n° EDE)
+          <input id="q" placeholder="ex. VILLE TANET ou 22323097" autocomplete="off"></label>
+        <div id="hits" class="hits" hidden></div>
+        <div id="farmStatus" class="status" hidden></div>
+        <div class="grid2" style="margin-top:12px">
+          <label class="f">N° d'exploitation (EDE)<input id="fNum"></label>
+          <label class="f">Libellé exact<input id="fName"></label>
+          <label class="f">Commune<input id="fCity"></label>
+          <label class="f">Téléphone (portable en priorité)<input id="fTel"></label>
+          <label class="f span2">E-mail<input id="fMail" type="email"></label>
+          <label class="f">N° de l'animal<input id="animal" placeholder="ex. 2662 (écrit à la main sur le scan)"></label>
+          <label class="f">Date du prélèvement<input id="date" type="date"></label>
+        </div>
+      </section>
+
+      <!-- 3. Valeurs -->
+      <section class="card">
+        <h2><span class="step">3</span> Valeurs à vérifier</h2>
+        <table class="pt" id="ptCore"><thead><tr><th>Paramètre</th><th>Valeur lue</th><th>Unité</th><th>Valeur convertie</th><th>Lecture</th></tr></thead><tbody></tbody></table>
+        <div id="derived" class="muted" style="margin-top:8px"></div>
+        <details id="extras"><summary>Autres paramètres (Mg, AST, GGT, glucose, créatinine, cholestérol, bilirubine)</summary>
+          <table class="pt" id="ptExtra"><tbody></tbody></table>
+        </details>
+      </section>
+
+      <!-- 4. Lecture -->
+      <section class="card">
+        <h2><span class="step">4</span> Lecture clinique</h2>
+        <div class="tog">
+          <label><input type="checkbox" id="tVive" checked> Vache vive, tête bonne</label>
+          <label><input type="checkbox" id="tPerf"> Déjà perfusée (Ca, P, glucose…)</label>
+        </div>
+        <div class="grid2">
+          <label class="f span2">Contexte (apparaît dans le rapport)
+            <textarea id="ctx" placeholder="ex. Vêlage il y a plus de 48 h. Essaie de se lever sans y parvenir ; membre postérieur gauche mal positionné."></textarea></label>
+          <label class="f span2">Titre du résumé<input id="sumTitle" data-t="sumTitle"></label>
+          <label class="f span2">Résumé<textarea id="sumText" data-t="sumText"></textarea></label>
+          <label class="f span2">Rapport A/G (AGR) : interprétation<textarea id="agrText" data-t="agrText" style="min-height:130px"></textarea></label>
+          <label class="f span2">Analyse des indicateurs (une puce par ligne, **gras** possible)<textarea id="analysis" data-t="analysis" style="min-height:190px"></textarea></label>
+          <label class="f">Actions côté vétérinaire (une par ligne)<textarea id="vetAct" data-t="vetAct" style="min-height:140px"></textarea></label>
+          <label class="f">Actions côté élevage (une par ligne)<textarea id="farmAct" data-t="farmAct" style="min-height:140px"></textarea></label>
+          <label class="f span2">Pronostic<input id="prog" data-t="prog"></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn small" id="regen" type="button">Régénérer tous les textes</button>
+          <span class="muted">Les textes se mettent à jour tant que vous ne les avez pas modifiés.</span>
+        </div>
+      </section>
+
+      <div class="row">
+        <button class="btn primary" id="btnReport" type="button">Générer le rapport</button>
+        <span id="reportMsg" class="warnline"></span>
+      </div>
+    </main>
+
+    <aside class="aside">
+      <div class="card">
+        <h2>Document lu</h2>
+        <img id="preview" alt="" hidden>
+        <p class="muted" id="previewEmpty">L'image apparaîtra ici pour comparer avec les valeurs lues. Cliquez dessus pour l'agrandir.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ================= VUE RAPPORT ================= -->
+<div id="reportView">
+  <div class="toolbar">
+    <button class="btn small" id="btnBack" type="button">&larr; Modifier</button>
+    <span class="sp"></span>
+    <span class="muted" style="color:#c9d6e6">Dans la fenêtre d'impression, choisir « Enregistrer au format PDF », marges « Aucune ».</span>
+    <span id="saveMsg" style="color:#c9d6e6;font-size:13px"></span><button class="btn small" id="btnSave" type="button" hidden>Enregistrer dans Output</button>
+    <button class="btn primary small" id="btnPrint" type="button">Imprimer / Enregistrer en PDF</button>
+  </div>
+  <div id="paper"></div>
+</div>
+
+<script src="eleveurs.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer>
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,d=2)=>Number(n).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const rich=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const digits=s=>String(s??'').replace(/\D+/g,'').replace(/^0+/,'');
+
+/* ---------- paramètres ---------- */
+const PARAMS=[
+ {k:'Ca',label:'Calcium (Ca)',canon:'mmol/L',dec:2,units:{'mg/L':1/40.078,'mg/dL':10/40.078,'mmol/L':1},def:'mg/L',ref:'2,15 – 2,75',core:1},
+ {k:'IP',label:'Phosphore (P)',canon:'mmol/L',dec:2,units:{'mg/L':1/30.974,'mg/dL':10/30.974,'mmol/L':1},def:'mg/L',ref:'1,3 – 2,4',core:1},
+ {k:'CK',label:'CK (créatine kinase)',canon:'U/L',dec:0,units:{'U/L':1},def:'U/L',ref:'40 – 180',core:1},
+ {k:'TP',label:'Protéines totales (PT)',canon:'g/L',dec:0,units:{'g/L':1,'g/dL':10},def:'g/L',ref:'68 – 88',ref2:'littérature : 65 – 75',core:1},
+ {k:'ALB',label:'Albumine (ALB)',canon:'g/L',dec:0,units:{'g/L':1,'g/dL':10},def:'g/L',ref:'30 – 43',core:1},
+ {k:'Mg',label:'Magnésium (Mg)',canon:'mmol/L',dec:2,units:{'mg/L':1/24.305,'mg/dL':10/24.305,'mmol/L':1},def:'mg/L',ref:'0,8 – 1,3'},
+ {k:'AST',label:'AST (ASAT)',canon:'U/L',dec:0,units:{'U/L':1},def:'U/L',ref:'61 – 103'},
+ {k:'GGT',label:'GGT',canon:'U/L',dec:0,units:{'U/L':1},def:'U/L',ref:'20 – 49',ref2:'littérature : 6 – 20'},
+ {k:'GLU',label:'Glucose (GLU)',canon:'mmol/L',dec:2,units:{'g/L':5.551,'mg/dL':0.05551,'mg/L':0.005551,'mmol/L':1},def:'g/L',ref:'3,1 – 4,1'},
+ {k:'CREA',label:'Créatinine (CREA)',canon:'µmol/L',dec:0,units:{'mg/L':8.84,'mg/dL':88.4,'µmol/L':1},def:'mg/L',ref:'45 – 150'},
+ {k:'CHOL',label:'Cholestérol (CHOL)',canon:'mmol/L',dec:2,units:{'g/L':2.586,'mg/dL':0.02586,'mmol/L':1},def:'g/L',ref:'> 2,86 (vache fraîche)'},
+ {k:'TBIL',label:'Bilirubine totale (TBIL)',canon:'µmol/L',dec:1,units:{'mg/L':1.7104,'mg/dL':17.104,'µmol/L':1},def:'mg/L',ref:'< 8,5'}
+];
+const PK=Object.fromEntries(PARAMS.map(p=>[p.k,p]));
+const ALIAS={PT:'TP',TP:'TP',PROT:'TP',CK:'CK',CPK:'CK',PHOS:'IP',IP:'IP',CA:'Ca',ALB:'ALB',MG:'Mg',AST:'AST',ASAT:'AST',GGT:'GGT',GLU:'GLU',GLUC:'GLU',CREA:'CREA',CHOL:'CHOL',TBIL:'TBIL'};
+
+/* ---------- état ---------- */
+const state={params:{},farm:{},texts:{},dirty:{},fromScan:{}};
+const SETTINGS_DEF={clinic:"SAS Vétérinaires de l'Arguenon",vet:'Dr Cédric Debattice',addr:'Impasse du Docteur de Calmette, 22130 Plancoët',tel:'02 96 84 13 83'};
+let settings=Object.assign({},SETTINGS_DEF,store.get('bvc.settings',{}));
+let farmDb=(window.ELEVEURS&&window.ELEVEURS.length)?window.ELEVEURS:store.get('bvc.farmdb',[]);
+const fromFile=!!(window.ELEVEURS&&window.ELEVEURS.length);
+let farmMeta=store.get('bvc.farmmeta',{});
+
+/* ---------- conversion / évaluation ---------- */
+function canonical(k){
+  const p=state.params[k]; if(!p||p.raw===''||p.raw==null) return null;
+  const x=parseFloat(String(p.raw).replace(/\s/g,'').replace(',','.')); if(!isFinite(x)) return null;
+  const f=PK[k].units[p.unit]; return f==null?null:x*f;
+}
+function values(){
+  const v={}; for(const p of PARAMS){const c=canonical(p.k); if(c!=null) v[p.k]=c;}
+  if(v.TP!=null&&v.ALB!=null){v.GLB=v.TP-v.ALB; if(v.GLB>0) v.AGR=v.ALB/v.GLB;}
+  return v;
+}
+function level(k,x,v){
+  // retourne {l:'ok'|'warn'|'bad', t:'texte'}
+  const ok=t=>({l:'ok',t:t||'Normal'}), wr=t=>({l:'warn',t}), bd=t=>({l:'bad',t});
+  switch(k){
+    case 'Ca': return x<=1.5?bd('TRÈS BAS'):x<2.15?bd('BAS'):x>2.75?wr('Élevé'):ok();
+    case 'IP': return x<1.3?bd('BAS'):x>2.4?wr('Élevé'):ok();
+    case 'Mg': return x<0.65?bd('BAS'):x<0.8?wr('Limite basse'):x>1.3?wr('Élevé'):ok();
+    case 'CK': {const r=x/180; return r>=10?bd('TRÈS ÉLEVÉE (× '+fmt(r,0)+')'):r>=2?bd('ÉLEVÉE (× '+fmt(r,1)+')'):r>1?wr('Modérément élevée'):ok();}
+    case 'AST': return x>103?wr('Élevée'):ok();
+    case 'GGT': return x>49?wr('Élevée'):ok();
+    case 'TP': return x<68?wr('Basse'):x>88?bd('ÉLEVÉES'):x>75?wr('Limite haute'):ok();
+    case 'ALB': return x<30?bd('BASSE'):x>43?wr('Élevée'):x<32?ok('Normale (bas de fourchette)'):ok();
+    case 'GLB': return x>47?bd('ÉLEVÉES'):x<31?wr('Basses'):ok();
+    case 'AGR': return x<0.7?bd('BAS : inflammation'):x<0.84?wr('Limite basse'):x>1.2?wr('Élevé'):ok();
+    case 'GLU': return x<3.1?wr('Bas'):x>4.1?wr('Élevé'):ok();
+    case 'CREA': return x>150?bd('ÉLEVÉE'):ok();
+    case 'CHOL': return x<2.86?wr('Bas'):ok();
+    case 'TBIL': return x>8.5?wr('Élevée'):ok();
+  }
+  return ok();
+}
+
+/* ---------- table des valeurs ---------- */
+function buildTables(){
+  const mk=(p)=>{
+    const tr=document.createElement('tr'); tr.dataset.k=p.k;
+    const opts=Object.keys(p.units).map(u=>`<option${u===p.def?' selected':''}>${u}</option>`).join('');
+    tr.innerHTML=`<td>${esc(p.label)}</td><td><input inputmode="decimal" data-v="${p.k}" autocomplete="off"></td><td><select data-u="${p.k}">${opts}</select></td><td class="conv muted"></td><td class="lvl"></td>`;
+    return tr;
+  };
+  PARAMS.forEach(p=>(p.core?$('#ptCore tbody'):$('#ptExtra tbody')).appendChild(mk(p)));
+  $$('#ptCore input,#ptExtra input,#ptCore select,#ptExtra select').forEach(el=>el.addEventListener('input',onParamEdit));
+}
+function setParam(k,raw,unit,fromScan){
+  const row=$(`tr[data-k="${k}"]`); if(!row) return;
+  row.querySelector('input').value=raw;
+  if(unit) row.querySelector('select').value=unit;
+  row.querySelector('input').classList.toggle('lu',!!fromScan);
+  syncParams();
+}
+function syncParams(){
+  state.params={};
+  $$('tr[data-k]').forEach(tr=>{const k=tr.dataset.k; state.params[k]={raw:tr.querySelector('input').value.trim(),unit:tr.querySelector('select').value};});
+  const v=values();
+  $$('tr[data-k]').forEach(tr=>{
+    const k=tr.dataset.k,p=PK[k],x=v[k],conv=tr.querySelector('.conv'),lv=tr.querySelector('.lvl');
+    if(x==null){conv.textContent='';lv.innerHTML='';return;}
+    conv.textContent=(state.params[k].unit!==p.canon?'= ':'')+(state.params[k].unit!==p.canon?fmt(x,p.dec)+' '+p.canon:'');
+    const L=level(k,x,v); lv.innerHTML=`<span class="chip ${L.l}">${esc(L.t)}</span>`;
+  });
+  const d=$('#derived');
+  d.innerHTML=v.AGR!=null?`Globulines (PT − ALB) : <b>${fmt(v.GLB,0)} g/L</b> &nbsp;·&nbsp; Rapport A/G : <b>${fmt(v.AGR,2)}</b> <span class="chip ${level('AGR',v.AGR).l}">${esc(level('AGR',v.AGR).t)}</span>`:'Rapport A/G : disponible dès que les protéines totales et l\'albumine sont renseignées.';
+  if(PARAMS.some(p=>!p.core&&v[p.k]!=null)) $('#extras').open=true;
+}
+function onParamEdit(e){ if(e.target.matches('input')) e.target.classList.remove('lu'); syncParams(); regenTexts(false); }
+
+/* ---------- génération des textes ---------- */
+function gen(){
+  const v=values(); if(!Object.keys(v).length) return {sumTitle:'',sumText:'',agrText:'',analysis:'',vetAct:'',farmAct:'',prog:''};
+  const vive=$('#tVive').checked, perf=$('#tPerf').checked;
+  const fx=k=>{const p=PK[k]; return fmt(v[k],p.dec)+' '+p.canon;};
+  const has=k=>v[k]!=null, L=k=>has(k)?level(k,v[k],v).l:'na';
+  const caLow=has('Ca')&&v.Ca<2.15, ipLow=has('IP')&&v.IP<1.3, mgLow=has('Mg')&&v.Mg<0.8;
+  const ckHi=has('CK')&&v.CK>180, ckR=has('CK')?v.CK/180:0, inflam=has('AGR')&&v.AGR<0.7;
+  const T={};
+
+  // résumé
+  const minLow=caLow||ipLow||(has('Mg')&&v.Mg<0.65);
+  let title;
+  if(ckHi&&ckR>=2&&inflam) title='atteinte musculaire et état inflammatoire';
+  else if(ckHi&&ckR>=2) title='atteinte musculaire (CK élevée)';
+  else if(inflam) title='état inflammatoire (rapport A/G bas)';
+  else if(minLow) title='déficit minéral';
+  else title='bilan sans anomalie majeure';
+  if(minLow&&title!=='déficit minéral') title+=', avec déficit minéral';
+  title=title.charAt(0).toUpperCase()+title.slice(1);
+  if(vive) title='Vache vive mais couchée : '+title.charAt(0).toLowerCase()+title.slice(1);
+  T.sumTitle=title;
+  const s=[];
+  if(ckHi) s.push(ckR>=10?`Les muscles sont fortement abîmés (CK à ${fmt(v.CK,0)} U/L, soit ${fmt(ckR,0)} fois la limite haute).`:ckR>=2?`Les muscles sont abîmés (CK à ${fmt(v.CK,0)} U/L, soit ${fmt(ckR,1)} fois la limite haute).`:`Les CK sont modérément élevées (${fmt(v.CK,0)} U/L).`);
+  if(inflam) s.push(`L'organisme est en état inflammatoire (rapport albumine/globulines à ${fmt(v.AGR,2)}).`);
+  const mins=[]; if(caLow) mins.push(v.Ca<=1.5?'le calcium est très bas':'le calcium est bas'); if(ipLow) mins.push('le phosphore est insuffisant'); if(has('Mg')&&v.Mg<0.65) mins.push('le magnésium est bas');
+  if(mins.length){const m=mins.join(', '); s.push(m.charAt(0).toUpperCase()+m.slice(1)+' : à corriger'+(ipLow&&!caLow?' (compléter le phosphore)':'')+'.');
+    if(caLow&&vive) s.push(`Le calcium seul ne suffit pas à expliquer le décubitus (la vache est vive, le tableau n'est pas celui d'une fièvre de lait sévère), mais il aggrave la faiblesse musculaire.`);}
+  if(!s.length) s.push(`Aucun paramètre ne sort des valeurs de référence sur ce bilan : l'origine du décubitus est à chercher ailleurs (examen clinique, membres, nerfs).`);
+  T.sumText=s.join(' ');
+
+  // AGR
+  if(has('AGR')){
+    const a=[];
+    a.push(`**Ce que c'est :** le rapport entre l'albumine (protéine fabriquée par le foie) et les globulines (protéines de défense et d'inflammation). Chez une vache adulte en bonne santé il est proche de 0,8 – 1,0 (norme constructeur 0,84 – 0,94).`);
+    const alb=fmt(v.ALB,0), glb=fmt(v.GLB,0);
+    if(v.AGR<0.7){
+      let drv;
+      if(v.GLB>47&&v.ALB>=30) drv=`L'albumine est conservée (${alb} g/L) mais les globulines sont élevées (${glb} g/L).`;
+      else if(v.ALB<30&&v.GLB<=47) drv=`L'albumine est basse (${alb} g/L) pour des globulines de ${glb} g/L.`;
+      else drv=`L'albumine est basse (${alb} g/L) et les globulines sont élevées (${glb} g/L).`;
+      a.push(`**Ici, ${fmt(v.AGR,2)} :** rapport nettement bas (< 0,7), signe d'un **état inflammatoire** et d'une activation immunitaire. ${drv}`);
+      a.push(`**Ce que cela signifie :** la vache n'a pas seulement un manque de minéraux, son organisme réagit à une lésion ou à une inflammation${ckHi?' (les muscles abîmés par le décubitus peuvent en être la source)':''}. Cela ne se corrige pas par une perfusion et peut ralentir la récupération. Le rapport A/G ne désigne pas la cause à lui seul : à croiser avec l'examen clinique (utérus, mamelle, membres).`);
+    }else if(v.AGR<0.84){
+      a.push(`**Ici, ${fmt(v.AGR,2)} :** limite basse. Une activation inflammatoire débutante est possible ; à surveiller au recontrôle.`);
+    }else if(v.AGR>1.2){
+      a.push(`**Ici, ${fmt(v.AGR,2)} :** rapport élevé, rare chez l'adulte ; une déshydratation est possible.`);
+    }else{
+      a.push(`**Ici, ${fmt(v.AGR,2)} :** rapport normal. Pas d'argument en faveur d'un état inflammatoire sur ce bilan.`);
+    }
+    T.agrText=a.join('\n\n');
+  }else T.agrText='';
+
+  // analyse
+  const b=[];
+  if(has('Ca')&&caLow){
+    b.push(v.Ca<=1.5?`**Calcium (${fx('Ca')}) : très bas**, dans la zone de l'hypocalcémie clinique (≈ 1,5 mmol/L et moins). À corriger en priorité.`:`**Calcium (${fx('Ca')}) : bas**, sous le seuil de 2,15 mmol/L retenu pour la vache couchée. À corriger.`);
+    if(perf) b[b.length-1]+=' Valeur encore basse malgré la perfusion récente.';
+    if(vive) b[b.length-1]+=` La vache reste vive : le calcium ne suffit pas, à lui seul, à expliquer le décubitus.`;
+  }
+  if(has('IP')&&ipLow) b.push(`**Phosphore (${fx('IP')}) : insuffisant** (seuil 1,3 mmol/L). Un manque de phosphore fragilise le muscle et favorise le décubitus. À compléter.`);
+  if(has('IP')&&v.IP>2.4) b.push(`**Phosphore (${fx('IP')}) : élevé** ; à interpréter avec la fonction rénale.`);
+  if(has('Mg')&&v.Mg<0.65) b.push(`**Magnésium (${fx('Mg')}) : bas** (< 0,65 mmol/L) : il aggrave l'hypocalcémie et peut expliquer une correction incomplète du calcium. À apporter.`);
+  else if(has('Mg')&&v.Mg<0.8) b.push(`**Magnésium (${fx('Mg')}) : limite** (0,65 – 0,8 mmol/L) : zone fragile qui fragilise la calcémie.`);
+  if(ckHi) b.push(ckR>=10?`**CK (${fx('CK')}) : très élevée**, soit ${fmt(ckR,0)} fois la limite haute (180 U/L). Elle traduit un écrasement musculaire lié au décubitus. C'est le marqueur à suivre pour juger de l'évolution.`:ckR>=2?`**CK (${fx('CK')}) : élevée** (× ${fmt(ckR,1)}) : atteinte musculaire. À suivre.`:`**CK (${fx('CK')}) : modérément élevée** : atteinte musculaire possible (effort, décubitus).`);
+  if(has('AST')&&v.AST>103) b.push(`**AST (${fx('AST')}) : élevée.** Enzyme du muscle et du foie : ${ckHi?'cohérente avec l\'atteinte musculaire (CK élevée) ; ':''}à départager avec la GGT (hépatique).`);
+  if(has('GGT')&&v.GGT>49) b.push(`**GGT (${fx('GGT')}) : élevée** : évoque le foie ou les voies biliaires. La référence constructeur (20 – 49 U/L) est plus haute que la littérature (6 – 20) : prudence.`);
+  if(has('TP')){
+    if(v.TP>88) b.push(`**Protéines totales (${fx('TP')}) : élevées**${has('GLB')&&v.GLB>47?', tirées par les globulines (inflammation)':' ; une déshydratation est possible'}.`);
+    else if(v.TP>75&&has('GLB')&&v.GLB>47) b.push(`**Protéines totales (${fx('TP')}) : hautes**, tirées par les globulines (inflammation), pas par l'albumine.`);
+    else if(v.TP<68) b.push(`**Protéines totales (${fx('TP')}) : basses** : hypoalbuminémie, pertes ou malnutrition à rechercher.`);
+  }
+  if(has('ALB')){
+    if(v.ALB<30) b.push(`**Albumine (${fx('ALB')}) : basse** : inflammation (protéine négative de la phase aiguë), atteinte hépatique ou pertes protéiques.`);
+    else if(inflam) b.push(`**Albumine (${fx('ALB')}) : conservée.** Peu d'arguments en faveur d'une atteinte hépatique sévère ou de pertes protéiques.`);
+  }
+  if(has('CREA')&&v.CREA>150) b.push(`**Créatinine (${fx('CREA')}) : élevée** : atteinte rénale, déshydratation ou lésions musculaires importantes. À surveiller (urines, hydratation).`);
+  if(has('CHOL')&&v.CHOL<2.86) b.push(`**Cholestérol (${fx('CHOL')}) : bas** pour une vache fraîche (< 2,86 mmol/L) : inflammation ou foie sollicité ; à lire avec le contexte.`);
+  if(has('TBIL')&&v.TBIL>8.5) b.push(`**Bilirubine (${fx('TBIL')}) : élevée** : foie sollicité (lipidose, cholestase) ou hémolyse.`);
+  if(has('GLU')&&v.GLU<3.1) b.push(`**Glucose (${fx('GLU')}) : bas** : déficit énergétique possible.`);
+  if(has('GLU')&&v.GLU>4.1) b.push(`**Glucose (${fx('GLU')}) : élevé** : stress${perf?' ou perfusion de glucose récente':''}, à interpréter avec prudence.`);
+  const normals=PARAMS.filter(p=>has(p.k)&&level(p.k,v[p.k],v).l==='ok'&&!(p.k==='ALB'&&inflam)).map(p=>`${p.label.replace(/ \(.*/,'')} (${fmt(v[p.k],p.dec)} ${p.canon})`);
+  if(normals.length) b.push(`Dans les valeurs attendues : ${normals.join(', ')}.`);
+  T.analysis=b.map(x=>'- '+x).join('\n');
+
+  // actions
+  const va=[];
+  if(caLow) va.push(perf?'Nouvelle perfusion de calcium (à renouveler selon l\'évolution).':'Perfusion de calcium (à renouveler selon l\'évolution).');
+  if(ipLow) va.push('Apport de phosphore.');
+  if(has('Mg')&&v.Mg<0.8) va.push('Apport de magnésium.');
+  else if(!has('Mg')&&caLow) va.push('Doser le magnésium (non mesuré) : un Mg bas entretient l\'hypocalcémie.');
+  if(ckHi) va.push('Soutien musculaire et traitement anti-inflammatoire selon prescription.');
+  if(inflam) va.push('Rechercher un foyer inflammatoire ou infectieux (utérus, mamelle, membres).');
+  if((has('AST')&&v.AST>103)||(has('GGT')&&v.GGT>49)||(has('TBIL')&&v.TBIL>8.5)) va.push('Surveiller le foie (AST, GGT, bilirubine) lors du recontrôle.');
+  if(has('CREA')&&v.CREA>150) va.push('Surveiller la fonction rénale et l\'hydratation.');
+  if(caLow||ipLow||ckHi||inflam) va.push('Recontrôle sanguin dans 24 à 48 h (CK, Ca, P).');
+  else va.push('Examen clinique complet (membres, articulations, nerfs, appareil génital).');
+  T.vetAct=va.join('\n');
+  T.farmAct=[
+    'Litière épaisse et sol non glissant ; éviter le béton nu.',
+    'Retourner la vache de côté toutes les 4 à 6 heures pour soulager ses muscles.',
+    'Eau et alimentation à portée, vache au calme.',
+    'La laisser essayer de se lever sur sol adhérent ; ne pas la tirer par la queue ou les hanches.',
+    'Surveiller appétit, rumination, température, mamelle et écoulements.',
+    'Nous appeler en cas d\'abattement, de fièvre, d\'arrêt de l\'appétit ou d\'escarres.'
+  ].join('\n');
+  T.prog=ckHi?'Réservé : il dépend de la capacité de la vache à se redresser dans les 24 à 48 h et de l\'évolution des CK au recontrôle.':'À réévaluer au recontrôle et selon l\'évolution clinique.';
+  return T;
+}
+const TMAP={sumTitle:'#sumTitle',sumText:'#sumText',agrText:'#agrText',analysis:'#analysis',vetAct:'#vetAct',farmAct:'#farmAct',prog:'#prog'};
+function regenTexts(force){
+  const T=gen();
+  for(const k in TMAP){ if(force||!state.dirty[k]){ $(TMAP[k]).value=T[k]||''; if(force) state.dirty[k]=false; } }
+}
+
+/* ---------- lecture du compte rendu ---------- */
+const MONTHS={janvier:1,fevrier:2,mars:3,avril:4,mai:5,juin:6,juillet:7,aout:8,septembre:9,octobre:10,novembre:11,decembre:12};
+function matchUnit(k,tok){
+  const t=String(tok||'').replace(/μ/g,'µ').trim().toLowerCase().replace(/[|]/g,'l');
+  let n=t.replace(/\/(i|1)$/,'/l').replace(/^g[i1l]$/,'g/l');
+  if(n==='ui/l'||n==='iu/l'||n==='u/i') n='u/l';
+  if(n==='umol/l') n='µmol/l';
+  for(const u of Object.keys(PK[k].units)) if(u.toLowerCase()===n) return u;
+  return null;
+}
+function parseText(text){
+  const out={values:{},client:null,num:null,date:null};
+  const t=String(text).replace(/\u00a0/g,' ');
+  let m=t.match(/Client\s*:?\s*(.+?)\s*\(\s*(\d{4,})\s*\)/i); if(m){out.client=m[1].trim();out.num=m[2];}
+  m=norm(t).match(/(\d{1,2}) (janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre) (\d{4})/);
+  if(m) out.date=`${m[3]}-${String(MONTHS[m[2]]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  const NUM='(\\d{1,3}(?:[ ]\\d{3})+(?:[.,]\\d+)?|\\d+(?:[.,]\\d+)?)';
+  const re=new RegExp('^\\s*([A-Za-z]{1,5})\\s*:?\\s+'+NUM+'\\s*([A-Za-zµμ/|0-9]{1,8})?');
+  for(const line of t.split(/\n+/)){
+    const r=line.match(re); if(!r) continue;
+    const k=ALIAS[r[1].toUpperCase()]; if(!k||out.values[k]) continue;
+    const unit=matchUnit(k,r[3])||PK[k].def;
+    out.values[k]={raw:r[2].replace(/ /g,'').replace('.',',').replace(/,$/,''),unit};
+  }
+  return out;
+}
+function linesFromItems(items){
+  const rows={};
+  for(const it of items){ if(!it.str||!it.str.trim()) continue; const y=Math.round(it.transform[5]/3); (rows[y]=rows[y]||[]).push(it); }
+  return Object.keys(rows).sort((a,b)=>b-a).map(y=>rows[y].sort((a,b)=>a.transform[4]-b.transform[4]).map(i=>i.str).join(' ')).join('\n');
+}
+function prep(src,box){
+  const sx=Math.round(src.width*box[0]),sy=Math.round(src.height*box[1]),sw=Math.round(src.width*(box[2]-box[0])),sh=Math.round(src.height*(box[3]-box[1]));
+  const c=document.createElement('canvas'); c.width=sw; c.height=sh; const x=c.getContext('2d',{willReadFrequently:true});
+  x.fillStyle='#fff'; x.fillRect(0,0,sw,sh); x.drawImage(src,sx,sy,sw,sh,0,0,sw,sh);
+  const im=x.getImageData(0,0,sw,sh),d=im.data,hist=new Uint32Array(256);
+  for(let i=0;i<d.length;i+=4){const g=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]); d[i]=d[i+1]=d[i+2]=g; hist[g]++;}
+  const tot=sw*sh; let acc=0,lo=0,hi=255; for(let g=0;g<256;g++){acc+=hist[g]; if(acc>=tot*0.02){lo=g;break;}}
+  acc=0; for(let g=255;g>=0;g--){acc+=hist[g]; if(acc>=tot*0.02){hi=g;break;}}
+  const span=Math.max(1,hi-lo); for(let i=0;i<d.length;i+=4){const g=Math.max(0,Math.min(255,(d[i]-lo)*255/span)); d[i]=d[i+1]=d[i+2]=g;}
+  x.putImageData(im,0,0); return c;
+}
+let ocrWorker=null;
+async function getWorker(onProgress){
+  if(!window.Tesseract) throw new Error('Module de lecture (OCR) indisponible : connexion Internet requise au premier chargement.');
+  if(!ocrWorker){
+    ocrWorker=await Tesseract.createWorker('fra',1,{
+      langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/fra/4.0.0_best_int',
+      logger:m=>{ if(m.status==='recognizing text') onProgress&&onProgress(m.progress); }
+    });
+    await ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+  }
+  return ocrWorker;
+}
+function setScan(kind,msg,pct){
+  const s=$('#scanStatus'); s.hidden=!msg; s.className='status '+(kind||''); s.textContent=msg||'';
+  const b=$('#scanBar'); b.hidden=pct==null; if(pct!=null) b.firstElementChild.style.width=Math.round(pct*100)+'%';
+}
+async function fileToCanvas(file){
+  if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+    if(!window.pdfjsLib) throw new Error('Module PDF indisponible : connexion Internet requise au premier chargement.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    const page=await pdf.getPage(1);
+    let text=''; try{ text=linesFromItems((await page.getTextContent()).items); }catch(e){}
+    const v0=page.getViewport({scale:1}), sc=Math.min(4,1800/v0.width), vp=page.getViewport({scale:sc});
+    const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+    const cx=c.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:cx,viewport:vp}).promise;
+    return {canvas:c,text,pages:pdf.numPages};
+  }
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('Image illisible.')); i.src=url;});
+    const sc=Math.min(1,2000/img.naturalWidth), c=document.createElement('canvas');
+    c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc);
+    const cx=c.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,c.width,c.height); cx.drawImage(img,0,0,c.width,c.height);
+    return {canvas:c,text:'',pages:1};
+  }finally{URL.revokeObjectURL(url);}
+}
+async function handleFile(file){
+  if(!file) return;
+  setScan('busy','Ouverture du fichier…',0);
+  try{
+    const {canvas,text,pages}=await fileToCanvas(file);
+    const pv=$('#preview'); pv.src=canvas.toDataURL('image/jpeg',0.75); pv.hidden=false; $('#previewEmpty').hidden=true;
+    let parsed=text?parseText(text):null, src='texte du PDF';
+    if(!parsed||Object.keys(parsed.values).length<2){
+      setScan('busy','Lecture de l\'image (OCR) — quelques secondes…',0.02);
+      const w=await getWorker(p=>setScan('busy','Lecture de l\'image (OCR)…',p));
+      let r=await w.recognize(prep(canvas,[0.06,0.04,0.52,0.92]));
+      parsed=parseText(r.data.text); src='OCR';
+      if(Object.keys(parsed.values).length<2){
+        r=await w.recognize(prep(canvas,[0,0,1,1]));
+        const p2=parseText(r.data.text);
+        if(Object.keys(p2.values).length>Object.keys(parsed.values).length) parsed=p2;
+      }
+    }
+    applyParsed(parsed,src,pages);
+  }catch(e){ console.error(e); setScan('err','Lecture impossible : '+(e&&e.message||e)+' — vous pouvez saisir les valeurs à la main.'); }
+}
+function applyParsed(parsed,src,pages){
+  PARAMS.forEach(p=>setParam(p.k,'',p.def,false));
+  const keys=Object.keys(parsed.values);
+  keys.forEach(k=>setParam(k,parsed.values[k].raw,parsed.values[k].unit,true));
+  if(parsed.date&&!$('#date').value) $('#date').value=parsed.date;
+  if(!$('#date').value) $('#date').value=new Date().toISOString().slice(0,10);
+  if(parsed.num||parsed.client) applyScanFarm(parsed.num,parsed.client);
+  regenTexts(false);
+  if(keys.length) setScan('ok',`${keys.length} valeur(s) lue(s) (${src})${pages>1?' — page 1 seulement':''}. Vérifiez chacune en regard de l'image ; le n° de l'animal est à saisir (manuscrit).`);
+  else setScan('warn','Aucune valeur reconnue : saisissez-les à la main ou essayez une image plus nette.');
+}
+
+/* ---------- base éleveurs ---------- */
+const FIELDS=[['num','N° d\'exploitation (EDE)',/(ede|numero|exploit|cheptel)/],['nom','Établissement',/(etablissement|libell|raison|nom|elevage|eleveur)/],['commune','Commune',/(commune|ville|localit)/],['tel1','Téléphone 1',/(tel|mobile|phone)/],['tel2','Téléphone 2',/(tel|mobile|phone)/],['mail','E-mail',/mail/]];
+const isMobile=t=>/^0[67]/.test(String(t).replace(/[\s.-]/g,'').replace(/^(\+33|0033)/,'0'));
+const pickTel=(a,b)=>[a,b].filter(Boolean).find(isMobile)||a||b||'';
+function dedupe(list){const m=new Map();for(const o of list){const k=digits(o.num)||norm(o.nom);const e=m.get(k);if(!e)m.set(k,o);else{if(o.tel&&(!e.tel||(!isMobile(e.tel)&&isMobile(o.tel))))e.tel=o.tel;if(!e.mail&&o.mail)e.mail=o.mail;}}return [...m.values()];}
+let dbSheet=null;
+function autoMap(headers){
+  const map={}; const H=headers.map(norm);
+  for(const [f,,re] of FIELDS){ const i=H.findIndex((h,ix)=>re.test(h)&&!Object.values(map).includes(ix)); map[f]=i; }
+  return map;
+}
+function rowsFromSheet(rows,map){
+  return dedupe(rows.slice(1).map(r=>{const o={}; for(const [f] of FIELDS) o[f]=map[f]>=0?String(r[map[f]]??'').trim():''; o.tel=pickTel(o.tel1,o.tel2); delete o.tel1; delete o.tel2; return o;}).filter(o=>o.num||o.nom));
+}
+async function loadDb(file){
+  if(!file) return;
+  try{
+    if(!window.XLSX) throw new Error('Module Excel indisponible : connexion Internet requise au premier chargement.');
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    dbSheet={wb,name:wb.SheetNames[0]};
+    useSheet(dbSheet.name,file.name);
+  }catch(e){ $('#dbInfo').textContent='Lecture impossible : '+(e.message||e); }
+}
+function useSheet(name,fname){
+  const ws=dbSheet.wb.Sheets[name]; const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()!==''));
+  if(!rows.length){ $('#dbInfo').textContent='Feuille vide.'; return; }
+  dbSheet.rows=rows; dbSheet.name=name; dbSheet.file=fname||dbSheet.file;
+  const map=autoMap(rows[0].map(String)); renderMap(rows[0].map(String),map); commitDb(map);
+}
+function commitDb(map){
+  farmDb=rowsFromSheet(dbSheet.rows,map); farmMeta={file:dbSheet.file,sheet:dbSheet.name,map};
+  const ok=store.set('bvc.farmdb',farmDb); store.set('bvc.farmmeta',farmMeta);
+  $('#dbInfo').textContent=`${farmDb.length} éleveur(s) chargé(s) — ${dbSheet.file} / feuille « ${dbSheet.name} »${ok?'':' (non mémorisé)'}.`;
+  searchFarm();
+}
+function renderMap(headers,map){
+  const box=$('#dbMap'); box.hidden=false;
+  const sheets=dbSheet.wb.SheetNames.length>1?`<label class="f">Feuille<select id="mapSheet">${dbSheet.wb.SheetNames.map(n=>`<option${n===dbSheet.name?' selected':''}>${esc(n)}</option>`).join('')}</select></label>`:'';
+  box.innerHTML=`<details><summary>Colonnes utilisées (modifiable)</summary><div class="mapgrid">${sheets}${FIELDS.map(([f,l])=>`<label class="f">${l}<select data-map="${f}"><option value="-1">— aucune —</option>${headers.map((h,i)=>`<option value="${i}"${map[f]===i?' selected':''}>${esc(h||('colonne '+(i+1)))}</option>`).join('')}</select></label>`).join('')}</div></details>`;
+  $$('select[data-map]',box).forEach(s=>s.addEventListener('change',()=>{const m={}; $$('select[data-map]',box).forEach(x=>m[x.dataset.map]=parseInt(x.value,10)); commitDb(m);}));
+  const ms=$('#mapSheet'); if(ms) ms.addEventListener('change',()=>useSheet(ms.value));
+}
+function searchFarm(){
+  const q=$('#q').value.trim(), hits=$('#hits');
+  if(!q||!farmDb.length){hits.hidden=true;return;}
+  const nq=norm(q), dq=digits(q), toks=nq.split(' ').filter(Boolean);
+  const res=farmDb.filter(f=>{const n=norm(f.nom+' '+f.commune); return (dq&&dq.length>=3&&digits(f.num).includes(dq))||toks.every(t=>n.includes(t));}).slice(0,10);
+  hits.hidden=false;
+  hits.innerHTML=res.length?res.map((f,i)=>`<button type="button" data-i="${farmDb.indexOf(f)}">${esc(f.nom)} <small>· ${esc(f.num)}${f.commune?' · '+esc(f.commune):''}</small></button>`).join(''):'<div class="muted" style="padding:8px 10px">Aucun résultat.</div>';
+  $$('button',hits).forEach(b=>b.addEventListener('click',()=>{pickFarm(farmDb[+b.dataset.i]);hits.hidden=true;}));
+}
+function pickFarm(f,note){
+  $('#fNum').value=f.num||''; $('#fName').value=f.nom||''; $('#fCity').value=f.commune||''; $('#fTel').value=f.tel||''; $('#fMail').value=f.mail||'';
+  setFarmStatus('ok',`Éleveur vérifié dans la base : ${f.nom} (n° ${f.num}).${note||''}`);
+}
+function setFarmStatus(kind,msg){const s=$('#farmStatus'); s.hidden=!msg; s.className='status '+kind; s.textContent=msg||'';}
+const LEGAL=new Set('gaec earl sarl scea eurl ei sc ets sas sa de du la le les des l d et'.split(' '));
+function findByName(name){
+  const toks=norm(name).split(' ').filter(t=>t&&!LEGAL.has(t)); if(!toks.length) return [];
+  return farmDb.filter(f=>{const n=norm(f.nom).split(' '); return toks.every(t=>n.includes(t));});
+}
+function applyScanFarm(num,name){
+  // Le n° du compte rendu IDEXX est le n° client IDEXX, pas le n° EDE : la recherche se fait par le nom.
+  const byNum=num?farmDb.filter(f=>digits(f.num)===digits(num)):[];
+  const c=byNum.length===1?byNum:findByName(name);
+  const clear=()=>{$('#fNum').value=''; $('#fName').value=name||''; $('#fCity').value=''; $('#fTel').value=''; $('#fMail').value='';};
+  if(c.length===1){ pickFarm(c[0],name&&norm(name)!==norm(c[0].nom)?` Retrouvé par le nom lu sur le compte rendu IDEXX (« ${name} ») : vérifiez l'élevage.`:''); }
+  else if(c.length>1){ clear(); $('#q').value=name||''; searchFarm(); setFarmStatus('warn',`${c.length} élevages correspondent à « ${name} » : choisissez le bon dans la liste ci-dessus.`); }
+  else{ clear(); setFarmStatus('warn',(farmDb.length?`« ${name||'?'} » introuvable dans la base : `:'Base éleveurs non chargée : ')+`recherchez l'élevage pour renseigner le n° EDE et les coordonnées.`); }
+}
+
+/* ---------- rapport ---------- */
+function fdate(s){ if(!s) return ''; const d=new Date(s+'T12:00:00'); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+function gaugeSVG(a){
+  const W=520,x0=10,x1=W-10,lo=0.3,hi=1.3,f=v=>x0+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(x1-x0);
+  const Z=[[0.3,0.7,'#e57373','BAS'],[0.7,0.84,'#ffcc80',''],[0.84,1.0,'#81c784','NORMAL'],[1.0,1.3,'#d9dee5','']];
+  let s=`<svg viewBox="0 0 ${W} 62" width="100%" style="display:block">`;
+  for(const [a0,a1,c,t] of Z){ s+=`<rect x="${f(a0)}" y="22" width="${f(a1)-f(a0)}" height="15" fill="${c}" stroke="#fff" stroke-width=".6"/>`; if(t) s+=`<text x="${(f(a0)+f(a1))/2}" y="33" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle">${t}</text>`; }
+  for(const [v,l] of [[0.3,'0,3'],[0.5,'0,5'],[0.7,'0,7'],[0.84,'0,84'],[1.0,'1,0'],[1.3,'1,3']]) s+=`<text x="${f(v)}" y="52" font-size="8" fill="#5c6b7a" text-anchor="middle">${l}</text>`;
+  const m=f(a), right=m>W*0.7;
+  s+=`<polygon points="${m-5},12 ${m+5},12 ${m},21" fill="#1f3a5f"/><text x="${right?m-8:m+8}" y="13" font-size="9.5" font-weight="700" fill="#1f3a5f" text-anchor="${right?'end':'start'}">Cette vache : ${fmt(a,2)}</text></svg>`;
+  return s;
+}
+const LCOL={ok:'#2e7d32',warn:'#e07b00',bad:'#c62828'};
+function buildReport(){
+  const v=values(), T={}; for(const k in TMAP) T[k]=$(TMAP[k]).value;
+  const farm={num:$('#fNum').value.trim(),name:$('#fName').value.trim(),city:$('#fCity').value.trim(),tel:$('#fTel').value.trim(),mail:$('#fMail').value.trim()};
+  const animal=$('#animal').value.trim(), date=fdate($('#date').value), ctx=$('#ctx').value.trim();
+  const paras=s=>s.split(/\n\s*\n/).filter(x=>x.trim()).map(x=>`<p>${rich(x.trim())}</p>`).join('');
+  const lines=s=>s.split('\n').map(x=>x.replace(/^\s*[-•]\s*/,'').trim()).filter(Boolean);
+  const ul=a=>`<ul class="rp-ul">${a.map(x=>`<li>${rich(x)}</li>`).join('')}</ul>`;
+
+  // tableau
+  const rows=[];
+  const add=(k,label,val,ref,ref2,L,cls)=>rows.push(`<tr class="${cls||''}"><td><b>${esc(label)}</b></td><td>${val}</td><td>${esc(ref)}${ref2?`<small>${esc(ref2)}</small>`:''}</td><td><span class="rp-chip ${L.l}">${esc(L.t)}</span></td></tr>`);
+  for(const p of PARAMS){
+    const x=v[p.k]; if(x==null) continue; const raw=state.params[p.k];
+    const val=`${fmt(x,p.dec)} ${esc(p.canon)}${raw.unit!==p.canon?`<small>${esc(raw.raw)} ${esc(raw.unit)} (valeur lue)</small>`:''}`;
+    add(p.k,p.label.replace(/ \(.*\)$/,''),val,p.ref+' '+p.canon,p.ref2,level(p.k,x,v));
+    if(p.k==='ALB'&&v.GLB!=null){ add('GLB','Globulines (PT − ALB)',`${fmt(v.GLB,0)} g/L`,'31 – 47 g/L','littérature : 30 – 35',level('GLB',v.GLB,v)); }
+    if(p.k==='ALB'&&v.AGR!=null){ const L=level('AGR',v.AGR,v); add('AGR','Rapport A/G (AGR)',`<b style="font-size:11pt">${fmt(v.AGR,2)}</b>`,'0,84 – 0,94 (normal) ; < 0,7 = bas','',L,'agr '+L.l); }
+  }
+
+  const agrL=v.AGR!=null?level('AGR',v.AGR,v):null;
+  const agrBox=v.AGR!=null?`<div class="rp-h">Le rapport A/G (AGR) : l'indicateur clé</div>
+   <div class="rp-agr"><div class="hd">Rapport albumine / globulines</div><div class="bd">
+    <div class="big"><div class="n" style="color:${LCOL[agrL.l]}">${fmt(v.AGR,2)}</div><div class="l">norme 0,84 – 0,94</div><div class="c" style="background:${LCOL[agrL.l]}">${esc(agrL.t.replace(/ :.*/,''))}</div></div>
+    <div>${gaugeSVG(v.AGR)}${paras(T.agrText)}</div></div></div>`:'';
+
+  const sum=`<div class="rp-h" style="margin-top:0">En résumé</div><div class="rp-sum"><div class="st">${esc(T.sumTitle)}</div>${esc(T.sumText)}</div>`;
+  const act=`<div class="rp-h">Plan d'action</div><div class="rp-act">
+    <div><h4 style="background:#1f3a5f">Côté vétérinaire</h4>${ul(lines(T.vetAct))}</div>
+    <div><h4 style="background:#2e7d32">Côté élevage</h4>${ul(lines(T.farmAct))}</div></div>`;
+
+  $('#paper').innerHTML=`<table class="pg"><thead><tr><td><div class="rp-head">
+      <div><div class="t1">Bilan sanguin — vache couchée</div><div class="t2">${esc(settings.clinic)}${settings.addr?' · '+esc(settings.addr):''}${settings.tel?' · '+esc(settings.tel):''}</div></div>
+      <div class="r">${esc(date)}</div></div></td></tr></thead>
+    <tbody><tr><td><div class="rp-body">
+      <div class="rp-id">
+        <div><b>Élevage</b>${esc(farm.name||'—')}<br><span style="color:#5c6b7a">${farm.num?'N° EDE '+esc(farm.num):''}${farm.city?'<br>'+esc(farm.city):''}${farm.tel?'<br>'+esc(farm.tel):''}${farm.mail?'<br>'+esc(farm.mail):''}</span></div>
+        <div><b>Animal</b>Bovin n° ${esc(animal||'—')}<br><span style="color:#5c6b7a">Prélèvement : ${esc(date)}</span></div>
+        <div><b>Vétérinaire</b>${esc(settings.vet)}<br><span style="color:#5c6b7a">Analyseur Catalyst One (IDEXX)</span></div></div>
+      ${sum}
+      ${ctx?`<p class="rp-ctx" style="margin-top:2.5mm"><b>Contexte :</b> ${esc(ctx)}</p>`:''}
+      ${agrBox}
+      <div class="rp-h">Résultats</div>
+      <table class="rp-t"><thead><tr><th>Paramètre</th><th>Résultat</th><th>Valeurs de référence</th><th>Lecture</th></tr></thead><tbody>${rows.join('')}</tbody></table>
+      <div class="rp-h">Analyse des indicateurs</div>${ul(lines(T.analysis))}
+      ${act}
+      ${T.prog?`<div class="rp-prog"><b>Pronostic :</b> ${esc(T.prog)}</div>`:''}
+    </div></td></tr></tbody>
+    <tfoot><tr><td><div class="rp-foot">Interprétation fondée sur le référentiel BoviLab / Rumexperts V2 (valeurs indicatives, intervalles du constructeur et de la littérature). Analyse portant sur un seul animal : à croiser avec l'examen clinique. Document établi par ${esc(settings.vet)} — ${esc(settings.clinic)}.</div></td></tr></tfoot></table>`;
+}
+function showReport(){
+  const v=values(), msg=$('#reportMsg'); msg.textContent='';
+  if(v.Ca==null||v.IP==null){ msg.textContent='Calcium et phosphore sont nécessaires pour générer le rapport.'; return; }
+  if(!$('#fName').value.trim()){ msg.textContent='Renseignez l\'éleveur (étape 2).'; return; }
+  if(!$('#animal').value.trim()){ msg.textContent='Renseignez le n° de l\'animal (étape 2).'; $('#animal').focus(); return; }
+  buildReport(); $('#app').style.display='none'; $('#reportView').style.display='block'; window.scrollTo(0,0);
+}
+
+/* ---------- enregistrement dans Output/<EDE>/ (serveur local) ---------- */
+let serverOk=false;
+async function initServer(){
+  try{ const r=await fetch('/ping',{cache:'no-store'}); serverOk=r.ok&&(await r.text())==='bilan-ok'; }catch(e){ serverOk=false; }
+  $('#btnSave').hidden=!serverOk;
+}
+async function saveOutput(){
+  const m=$('#saveMsg'); m.textContent='Enregistrement…';
+  try{
+    const clone=document.documentElement.cloneNode(true); clone.querySelectorAll('script').forEach(x=>x.remove());
+    const r=await fetch('/sauver',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ede:$('#fNum').value.trim(),animal:$('#animal').value.trim(),date:$('#date').value,html:'<!doctype html>'+clone.outerHTML})});
+    const j=await r.json(); m.textContent=j.ok?'Enregistré : '+j.path:'Échec : '+(j.error||r.status);
+  }catch(e){ m.textContent='Échec : '+e.message; }
+}
+
+/* ---------- câblage ---------- */
+function init(){
+  buildTables(); syncParams();
+  $('#date').value=new Date().toISOString().slice(0,10);
+  const S={sClinic:'clinic',sVet:'vet',sAddr:'addr',sTel:'tel'};
+  for(const id in S){ const el=$('#'+id); el.value=settings[S[id]]; el.addEventListener('input',()=>{settings[S[id]]=el.value; store.set('bvc.settings',settings);}); }
+  $('#btnSettings').onclick=()=>{const c=$('#settingsCard'); c.hidden=!c.hidden;};
+  $('#pickFile').onclick=()=>$('#file').click();
+  $('#file').onchange=e=>{handleFile(e.target.files[0]); e.target.value='';};
+  const drop=$('#drop');
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+  $('#pickDb').onclick=()=>$('#dbFile').click();
+  $('#dbFile').onchange=e=>{loadDb(e.target.files[0]); e.target.value='';};
+  $('#q').addEventListener('input',searchFarm);
+  $('#preview').onclick=e=>e.target.classList.toggle('zoom');
+  $$('textarea[data-t],input[data-t]').forEach(el=>el.addEventListener('input',()=>{state.dirty[el.dataset.t]=true;}));
+  ['#tVive','#tPerf'].forEach(s=>$(s).addEventListener('change',()=>regenTexts(false)));
+  $('#regen').onclick=()=>regenTexts(true);
+  $('#btnReport').onclick=showReport;
+  $('#btnBack').onclick=()=>{$('#reportView').style.display='none';$('#app').style.display='block';};
+  $('#btnPrint').onclick=()=>window.print();
+  $('#btnSave').onclick=saveOutput;
+  $('#btnReset').onclick=()=>{
+    PARAMS.forEach(p=>setParam(p.k,'',p.def,false));
+    ['#fNum','#fName','#fCity','#fTel','#fMail','#animal','#ctx','#q'].forEach(s=>$(s).value='');
+    $('#date').value=new Date().toISOString().slice(0,10); $('#hits').hidden=true; setFarmStatus('',''); setScan('','');
+    $('#preview').hidden=true; $('#previewEmpty').hidden=false; state.dirty={}; regenTexts(true); $('#reportMsg').textContent='';
+  };
+  if(farmDb.length) $('#dbInfo').textContent=fromFile?`${farmDb.length} élevages (listing du dossier, eleveurs.js).`:`${farmDb.length} éleveur(s) en mémoire${farmMeta.file?' — '+farmMeta.file:''}.`;
+  initServer();
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

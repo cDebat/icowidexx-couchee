@@ -1,0 +1,8 @@
+.venv/
+.DS_Store
+__pycache__/
+# données éleveurs (personnelles) et rapports générés
+Listing complet*.xlsx
+eleveurs.js
+Output/
+Archives/
