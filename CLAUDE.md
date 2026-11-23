@@ -48,6 +48,6 @@ Colonnes du listing : A n° d'atelier (EDE), B Établissement, C Commune de l'at
 
 ## Conventions
 
-- Commiter régulièrement et pousser sur GitHub, messages clairs.
+- Sauvegarde : après chaque modification significative, commiter (message clair, en français) et pousser sur GitHub (`origin` = https://github.com/cDebat/icowidexx-couchee, branche `main`). `./Sauvegarder.command "message"` (ou double-clic) fait `git add -A`, commit et push. Claude Code doit commiter à chaque lot de modifications, puis lancer le push ou rappeler à l'utilisateur de le faire.
 - Valeurs de référence : toujours celles du référentiel BoviLab / Rumexperts (jamais les intervalles imprimés par IDEXX).
 - Les textes du rapport sont indicatifs et à valider par le vétérinaire ; analyse d'un seul animal, à croiser avec l'examen clinique.
