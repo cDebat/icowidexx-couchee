@@ -6,3 +6,6 @@ Listing complet*.xlsx
 eleveurs.js
 Output/
 Archives/
+
+# déploiement serveur : secrets
+deploy/.env

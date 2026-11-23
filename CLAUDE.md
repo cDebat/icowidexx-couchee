@@ -51,3 +51,10 @@ Colonnes du listing : A n° d'atelier (EDE), B Établissement, C Commune de l'at
 - Sauvegarde : après chaque modification significative, commiter (message clair, en français) et pousser sur GitHub (`origin` = https://github.com/cDebat/icowidexx-couchee, branche `main`). `./Sauvegarder.command "message"` (ou double-clic) fait `git add -A`, commit et push. Claude Code doit commiter à chaque lot de modifications, puis lancer le push ou rappeler à l'utilisateur de le faire.
 - Valeurs de référence : toujours celles du référentiel BoviLab / Rumexperts (jamais les intervalles imprimés par IDEXX).
 - Les textes du rapport sont indicatifs et à valider par le vétérinaire ; analyse d'un seul animal, à croiser avec l'examen clinique.
+
+## Déploiement serveur (VPS Hostinger, https://idexx.primholstein.eu)
+- `Dockerfile` + `deploy/docker-compose.yml` : conteneur `icowidexx` derrière le Traefik du VPS (HTTPS Let's Encrypt, résolveur `mytlschallenge`), mot de passe commun via basic-auth Traefik (`IDEXX_BASICAUTH` dans `deploy/.env`, jamais sur GitHub).
+- Mode serveur : `SERVER_MODE=1`, `HOST`, `PORT`, `DATA_DIR` (volume `/data`), `NO_SANDBOX=1`. Le bouton « Quitter » n'arrête pas l'appli en mode serveur.
+- `dbx.py` (stdlib) : envoi des PDF dans `DROPBOX_BASE/Output/<EDE>/` et lecture du listing `Listing complet*.xlsx` dans `DROPBOX_BASE` (synchro au démarrage puis toutes les 6 h ; `GET /maj-eleveurs` pour forcer). Secrets `DROPBOX_APP_KEY/SECRET/REFRESH_TOKEN` : `/opt/apps/secrets/dropbox.env` sur le VPS (root, 600), jamais dans le dépôt.
+- Dépôt cloné sur le VPS dans `/opt/apps/icowidexx` (clé de déploiement GitHub en lecture seule). Mise à jour : `cd /opt/apps/icowidexx && git pull && cd deploy && docker compose up -d --build`.
+- `maj_eleveurs.convertir(xlsx, dest)` est réutilisé par le serveur ; le script reste utilisable en ligne de commande.

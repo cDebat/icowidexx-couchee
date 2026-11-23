@@ -1,0 +1,9 @@
+.git
+.venv
+__pycache__
+Output
+Archives
+*.xlsx
+eleveurs.js
+deploy
+*.command

@@ -1,0 +1,41 @@
+# Déploiement sur le VPS Hostinger, derrière le Traefik déjà en place (celui de n8n).
+# Préparer deploy/.env (jamais sur GitHub) avec :
+#   TRAEFIK_NETWORK=<réseau docker partagé avec Traefik>
+#   IDEXX_BASICAUTH='equipe:<hash htpasswd>'
+# Secrets Dropbox : /opt/apps/secrets/dropbox.env (réservé à root).
+# Lancer :  cd deploy && docker compose up -d --build
+services:
+  icowidexx:
+    build: ..
+    image: icowidexx:latest
+    container_name: icowidexx
+    restart: always
+    env_file: /opt/apps/secrets/dropbox.env
+    environment:
+      - DROPBOX_BASE=/Rurale/Primholstein.eu/Idexx
+    volumes:
+      - icowidexx_data:/data
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK}
+      - traefik.http.services.idexx.loadbalancer.server.port=8770
+      # HTTPS + mot de passe commun (authentification basique Traefik)
+      - traefik.http.routers.idexx.rule=Host(`idexx.primholstein.eu`)
+      - traefik.http.routers.idexx.entrypoints=websecure
+      - traefik.http.routers.idexx.tls=true
+      - traefik.http.routers.idexx.tls.certresolver=mytlschallenge
+      - traefik.http.routers.idexx.middlewares=idexx-auth
+      - traefik.http.middlewares.idexx-auth.basicauth.users=${IDEXX_BASICAUTH}
+      # HTTP -> HTTPS
+      - traefik.http.routers.idexx-http.rule=Host(`idexx.primholstein.eu`)
+      - traefik.http.routers.idexx-http.entrypoints=web
+      - traefik.http.routers.idexx-http.middlewares=idexx-redirect
+      - traefik.http.middlewares.idexx-redirect.redirectscheme.scheme=https
+networks:
+  web:
+    external: true
+    name: ${TRAEFIK_NETWORK}
+volumes:
+  icowidexx_data:

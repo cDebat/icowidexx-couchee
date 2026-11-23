@@ -805,8 +805,8 @@ async function saveOutput(){
   try{
     const clone=document.documentElement.cloneNode(true); clone.querySelectorAll('script').forEach(x=>x.remove());
     const r=await fetch('/sauver',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ede:$('#fNum').value.trim(),animal:$('#animal').value.trim(),date:$('#date').value,html:'<!doctype html>'+clone.outerHTML})});
-    const j=await r.json(); m.title=j.path||''; m.textContent=j.ok?'✔ Enregistré dans '+j.path:'Échec : '+(j.error||r.status);
-    if(j.ok){ showDone('Rapport enregistré dans '+j.path+'.'); return j.path; }
+    const j=await r.json(); const where=j.label||j.path||''; m.title=where; m.textContent=j.ok?'✔ Enregistré — '+where:'Échec : '+(j.error||r.status);
+    if(j.ok){ showDone('Rapport enregistré — '+where+'.'); return j.path; }
   }catch(e){ m.textContent='Échec : '+e.message; }
   return null;
 }
@@ -821,8 +821,9 @@ async function printOrOpen(){
 function showDone(msg){ $('#doneMsg').textContent=msg; $('#doneBox').hidden=false; }
 function newAnalysis(){ $('#doneBox').hidden=true; $('#saveMsg').textContent=''; $('#btnReset').click(); $('#btnBack').click(); window.scrollTo(0,0); }
 async function quitApp(){
-  if(serverOk){ try{ await fetch('/quitter',{method:'POST'}); }catch(e){} }
-  document.body.innerHTML='<div style="font:16px system-ui;padding:60px 20px;text-align:center;color:#1f3a5f"><h2>Application arrêtée</h2><p>Vous pouvez fermer cet onglet.</p></div>';
+  let srvMode=false;
+  if(serverOk){ try{ const q=await fetch('/quitter',{method:'POST'}); srvMode=!!(await q.json()).server; }catch(e){} }
+  document.body.innerHTML='<div style="font:16px system-ui;padding:60px 20px;text-align:center;color:#1f3a5f"><h2>'+(srvMode?'Session terminée':'Application arrêtée')+'</h2><p>Vous pouvez fermer cet onglet.</p></div>';
   try{ window.close(); }catch(e){}
 }
 
