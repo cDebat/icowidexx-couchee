@@ -147,6 +147,18 @@ ul.rp-ul li{margin:0 0 1.5mm;break-inside:avoid}
 .rp-act li{margin-bottom:1.3mm;font-size:9pt}
 .rp-prog{margin-top:3.5mm;font-size:9.5pt;break-inside:avoid}
 
+.sheet.dense .rp-body{padding-top:3mm}
+.sheet.dense .rp-id{margin-bottom:2.5mm}.sheet.dense .rp-id div{padding:1.6mm 3mm;font-size:8.5pt}
+.sheet.dense .rp-h{margin:3mm 0 1.2mm;font-size:10.5pt}
+.sheet.dense table.rp-t{font-size:8.3pt}
+.sheet.dense table.rp-t td{padding:.75mm 2.2mm}.sheet.dense table.rp-t th{padding:1mm 2.2mm}
+.sheet.dense .rp-t small{display:inline;margin-left:1.5mm;font-size:7pt}
+.sheet.dense .rp-agr .bd{padding:1.6mm 3mm;font-size:8.5pt}.sheet.dense .rp-agr .big .n{font-size:17pt}
+.sheet.dense .rp-agr p{margin-top:1mm}
+.sheet.dense ul.rp-ul{font-size:8.6pt}.sheet.dense ul.rp-ul li{margin-bottom:.9mm}
+.sheet.dense .rp-sum{padding:2mm 3mm;font-size:8.8pt}.sheet.dense .rp-sum .st{font-size:9.6pt}
+.sheet.dense .rp-act li{font-size:8.4pt;margin-bottom:.8mm}.sheet.dense .rp-act h4{padding:1.1mm 3mm;margin-bottom:1.4mm}
+.sheet.dense .rp-prog{font-size:8.8pt;margin-top:2mm}
 @media screen{.sheet+.sheet{border-top:8px solid #cfd9e6}}
 @media print{
   @page{size:A4;margin:0}
@@ -753,7 +765,7 @@ function buildReport(){
       ${sum}
       ${act}
       ${T.prog?`<div class="rp-prog"><b>Pronostic :</b> ${esc(T.prog)}</div>`:''}`;
-  $('#paper').innerHTML=`<section class="sheet">${head}<div class="rp-body">${page1}</div>${foot}</section><section class="sheet last">${head}<div class="rp-body">${page2}</div>${foot}</section>`;
+  $('#paper').innerHTML=`<section class="sheet${rows.length>9?' dense':''}">${head}<div class="rp-body">${page1}</div>${foot}</section><section class="sheet last${rows.length>9?' dense':''}">${head}<div class="rp-body">${page2}</div>${foot}</section>`;
 }
 function validate(){
   const missing=[];
