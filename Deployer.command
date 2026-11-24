@@ -29,7 +29,7 @@ git push -u origin "$(git branch --show-current)" || { echo "✘ Push GitHub imp
 echo "✔ Sauvegardé sur GitHub."
 
 # 2) Mise à jour du serveur
-echo "→ Mise à jour du serveur…"
+echo "→ Mise à jour du serveur : reconstruction en cours, comptez 1 à 3 minutes (rien ne s'affiche pendant ce temps, c'est normal)…"
 ssh -i "$CLE" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15 "$SERVEUR" \
   'cd /opt/apps/icowidexx && git pull --ff-only && cd deploy && docker compose up -d --build 2>&1 | tail -5 && docker ps --format "{{.Names}} {{.Status}}" | grep icowidexx' \
   || { echo "✘ Mise à jour du serveur impossible (clé SSH non autorisée ? serveur injoignable ?)."; fin 1; }
