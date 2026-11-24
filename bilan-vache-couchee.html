@@ -638,7 +638,7 @@ function applyParsed(parsed,src,pages){
 }
 
 /* ---------- base éleveurs ---------- */
-const FIELDS=[['num','N° d\'exploitation (EDE)',/(ede|numero|exploit|cheptel)/],['nom','Établissement',/(etablissement|libell|raison|nom|elevage|eleveur)/],['commune','Commune',/(commune|ville|localit)/],['tel1','Téléphone 1',/(tel|mobile|phone)/],['tel2','Téléphone 2',/(tel|mobile|phone)/],['mail','E-mail',/mail/]];
+const FIELDS=[['num','N° d\'exploitation (EDE)',/(ede|numero|exploit|cheptel)/],['nom','Établissement',/(etablissement|libell|raison|nom|elevage|eleveur)/],['commune','Commune',/(commune|ville|localit)/],['tel1','Téléphone 1',/^(tel|mobile|phone)/],['tel2','Téléphone 2',/^(tel|mobile|phone)/],['mail','E-mail',/mail/]];
 const isMobile=t=>/^0[67]/.test(String(t).replace(/[\s.-]/g,'').replace(/^(\+33|0033)/,'0'));
 const pickTel=(a,b)=>[a,b].filter(Boolean).find(isMobile)||a||b||'';
 function dedupe(list){const m=new Map();for(const o of list){const k=digits(o.num)||norm(o.nom);const e=m.get(k);if(!e)m.set(k,o);else{if(o.tel&&(!e.tel||(!isMobile(e.tel)&&isMobile(o.tel))))e.tel=o.tel;if(!e.mail&&o.mail)e.mail=o.mail;}}return [...m.values()];}
